@@ -56,7 +56,7 @@ async fn handle_proxy(
     // <Packet Length><Packet Id><Something><Domain len + Domain><Port><Status>
     match Handshake::decode_packet(&mut cursor) {
         Ok(handshake) => {
-            let used_addr = handshake.server_adddress.0;
+            let used_addr = handshake.server_adddress.0.trim_end_matches('.').to_string();
     
             if used_addr != target_domain {
                 warn!("Dropping incorrect connection (Player used: {})", used_addr);
