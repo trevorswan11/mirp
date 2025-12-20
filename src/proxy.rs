@@ -68,7 +68,7 @@ pub async fn serve(config: ProxyConfig) -> Result<()> {
             let ip = peer_addr.ip();
             let lock = blacklist.read().await;
             if lock.contains(&ip) {
-                warn!("Dropped blacklisted IP: {}", ip);
+                warn!("🚫 Dropped blacklisted IP: {}", ip);
                 continue;
             }
         }
@@ -88,39 +88,28 @@ fn watch() -> Result<(Arc<RwLock<HashSet<IpAddr>>>, notify::RecommendedWatcher)>
     let initial_set = load_blacklist();
     let blacklist = Arc::new(RwLock::new(initial_set));
 
-    let path_str = &*BLACKLIST_FILE;
-    let path = Path::new(path_str);
-
+    let path = &*BLACKLIST_FILE;
     OpenOptions::new()
         .create(true)
         .append(true)
         .open(path)
         .inspect_err(|e| error!("Could not create/open blacklist file: {e}"))?;
 
-    let absolute_path = fs::canonicalize(path)?;
-    let parent_dir = absolute_path
-        .parent()
-        .ok_or_else(|| anyhow!("Invalid path"))?
-        .to_path_buf();
-
     let blacklist_clone = Arc::clone(&blacklist);
-    let path_to_check = absolute_path.clone();
-
     let mut watcher = notify::recommended_watcher(move |res: Result<Event, _>| {
         if let Ok(event) = res {
-            if event.paths.iter().any(|p| p == &path_to_check) {
-                if event.kind.is_modify() || event.kind.is_create() || event.kind.is_access() {
-                    let new_set = load_blacklist();
-                    if let Ok(mut lock) = blacklist_clone.try_write() {
-                        *lock = new_set;
-                        info!("Reloaded blacklist: {} entries", lock.len());
-                    }
+            // Blocking write here because watcher callbacks are usually synchronous
+            if event.kind.is_modify() {
+                let new_set = load_blacklist();
+                if let Ok(mut lock) = blacklist_clone.try_write() {
+                    *lock = new_set;
+                    info!("Reloaded blacklist from disk");
                 }
             }
         }
     })?;
 
-    watcher.watch(&parent_dir, RecursiveMode::NonRecursive)?;
+    watcher.watch(Path::new(path), RecursiveMode::NonRecursive)?;
     Ok((blacklist, watcher))
 }
 
