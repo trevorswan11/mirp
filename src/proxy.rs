@@ -168,10 +168,7 @@ async fn handle(
             )
             .await?;
         }
-        Err(e) => {
-            warn!("Failed to decode packet: {e}");
-            strike(peer_ip).await?;
-        }
+        Err(e) => warn!("Failed to decode packet: {e}"),
     }
 
     Ok(())
