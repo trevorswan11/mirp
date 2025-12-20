@@ -16,24 +16,23 @@ use dotenvy::dotenv;
 pub fn env() -> Result<(String, String, String)> {
     dotenv()
         .inspect_err(|_| {
-            let mut new_env =
-                File::create_new(".env").expect("Environment file exists but could not be read");
-            new_env
+            File::create_new(".env")
+                .unwrap()
                 .write(
                     b"TARGET_DOMAIN=\"mc.yourdomain.com\"\n\
                     PUBLIC_ADDRESS=\"0.0.0.0:12345\"\n\
-                    LOCAL_ADDRESS=\"127.0.0.1:25565\""
+                    LOCAL_ADDRESS=\"127.0.0.1:25565\"",
                 )
-                .expect("Failed to write to .env");
+                .unwrap();
 
             eprintln!("I couldn't find a .env file so I made one for you with placeholder values!");
         })
         .map_err(|_| anyhow!("Failed to load .env"))?;
 
     Ok((
-        env::var("TARGET_DOMAIN").expect("Failed to load TARGET_DOMAIN var"),
-        env::var("PUBLIC_ADDRESS").expect("Failed to load PUBLIC_ADDRESS var"),
-        env::var("LOCAL_ADDRESS").expect("Failed to load LOCAL_ADDRESS var"),
+        env::var("TARGET_DOMAIN")?,
+        env::var("PUBLIC_ADDRESS")?,
+        env::var("LOCAL_ADDRESS")?,
     ))
 }
 
