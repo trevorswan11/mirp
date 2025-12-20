@@ -10,10 +10,9 @@ use anyhow::{Result, anyhow};
 use chrono::Local;
 use dotenvy::dotenv;
 
-/// Returns the three key environment variables as:
-///
-/// (TARGET_DOMAIN, PUBLIC_ADDRESS, LOCAL_ADDRESS)
-pub fn env() -> Result<(String, String, String)> {
+use crate::proxy::ProxyConfig;
+
+pub fn env() -> Result<ProxyConfig> {
     dotenv()
         .inspect_err(|_| {
             File::create_new(".env")
@@ -21,7 +20,8 @@ pub fn env() -> Result<(String, String, String)> {
                 .write(
                     b"TARGET_DOMAIN=\"mc.yourdomain.com\"\n\
                     PUBLIC_ADDRESS=\"0.0.0.0:12345\"\n\
-                    LOCAL_ADDRESS=\"127.0.0.1:25565\"",
+                    LOCAL_ADDRESS=\"127.0.0.1:25565\"\n\
+                    BLACKLIST_PATH=\"mirp.blacklist\"",
                 )
                 .unwrap();
 
@@ -29,11 +29,11 @@ pub fn env() -> Result<(String, String, String)> {
         })
         .map_err(|_| anyhow!("Failed to load .env"))?;
 
-    Ok((
-        env::var("TARGET_DOMAIN")?,
-        env::var("PUBLIC_ADDRESS")?,
-        env::var("LOCAL_ADDRESS")?,
-    ))
+    Ok(ProxyConfig {
+        target_domain: env::var("TARGET_DOMAIN")?,
+        public_address: env::var("PUBLIC_ADDRESS")?,
+        local_address: env::var("LOCAL_ADDRESS")?,
+    })
 }
 
 // Initializes the application-wide logger for use with log macros

@@ -1,11 +1,11 @@
-mod register;
 mod proxy;
+mod register;
 
 use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let serve_vars = register::env()?;
+    let proxy_info = register::env()?;
     register::logger()?;
-    Ok(proxy::serve(serve_vars).await?)
+    Ok(proxy::serve(proxy_info).await?)
 }

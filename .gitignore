@@ -24,4 +24,5 @@ Cargo.lock
 
 .env*
 *.log
+*.blacklist
 .DS_Store
