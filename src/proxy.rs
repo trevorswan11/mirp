@@ -41,6 +41,7 @@ async fn handle_proxy(
     target_domain: String,
     local_addr: String,
 ) -> Result<()> {
+    client.set_nodelay(true)?;
     // Peek at the first 1KB to find the Minecraft Handshake
     let mut raw = [0u8; 1024];
     let n = client.peek(&mut raw).await?;
@@ -66,7 +67,9 @@ async fn handle_proxy(
             info!("Trusted connection for domain: {}", used_addr);
     
             let mut server = TcpStream::connect(local_addr).await?;
-            io::copy_bidirectional(client, &mut server).await?;
+            server.set_nodelay(true)?;
+            let transfer_buf_size = 1024 * 128;
+            io::copy_bidirectional_with_sizes(client, &mut server, transfer_buf_size, transfer_buf_size).await?;
         }
         Err(e) => warn!("Failed to decode packet: {e}")
     }
