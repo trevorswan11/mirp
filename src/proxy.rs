@@ -68,7 +68,7 @@ pub async fn serve(config: ProxyConfig) -> Result<()> {
             let ip = peer_addr.ip();
             let lock = blacklist.read().await;
             if lock.contains(&ip) {
-                warn!("🚫 Dropped blacklisted IP: {}", ip);
+                warn!("Dropped blacklisted IP: {}", ip);
                 continue;
             }
         }
