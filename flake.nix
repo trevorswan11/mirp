@@ -17,7 +17,6 @@
           buildInputs = with pkgs; [
             rustToolchain
             rust-analyzer
-            git
           ];
         };
       }
